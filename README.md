@@ -35,7 +35,7 @@ source env/bin/activate
 ```
 and on Windows run:
 ```
-env/Scripts/activate
+source env/Scripts/activate
 ```
 
 You should now be in the virtual environment for Python and any packages you install via 'pip' will now only be installed into this directory.
