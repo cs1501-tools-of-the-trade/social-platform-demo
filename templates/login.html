@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Home</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <nav class="navbar sticky-top navbar-expand-sm navbar-dark bg-primary">
+            <a class="navbar-brand" href="#">Tweetr</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active"><a href="#" class="nav-link">Login</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container mt-2">
+            <div class="row">
+                <div class="col-2"></div>
+                <div class="col-8 login-form">
+                    <div class="card text-center">
+                        <div class="card-header">
+                            Login
+                        </div>
+                        <div class="card-body">
+                            <form>
+                                    <input type="text" class="form-control" name="username" placeholder="Username"><br/>
+                                    <input type="password" class="form-control" name="password" placeholder="Password"><br/>
+                                    <button class="btn btn-primary" type="submit" name="login">Sign In</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-2"></div>
+            </div>
+        </div>
+    </body>
+</html>
