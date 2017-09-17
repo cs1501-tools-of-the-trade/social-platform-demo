@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Tweetr{% endblock %}
+
+<!-- TODO: check if registered or logged in already -->
+{% block nav_login %}
+<li class="nav-item active"><a href="/login" class="nav-link">Login</a></li>
+{% endblock %}
+
+{% block nav_register %}
+<li class="nav-item active"><a href="/register" class="nav-link">Register</a></li>
+{% endblock %}
+
+{% block nav_profile %}
+<li class="nav-item active"><a href="/profile" class="nav-link">Profile</a></li>
+{% endblock %}
+
+{% block content %}
+<h1>Some content here.</h1>
+{% endblock %}

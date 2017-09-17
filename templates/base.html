@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            {% block title %}{% endblock %}
+        </title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <nav class="navbar sticky-top navbar-expand-sm navbar-dark bg-primary">
+            <a class="navbar-brand" href="/">Tweetr</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" aria-expanded="false">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    {% block nav_login %}{% endblock %}
+                    {% block nav_register %}{% endblock %}
+                    {% block nav_profile %}{% endblock %}
+                </ul>
+            </div>
+        </nav>
+        
+        <div class="container mt-2">
+            {% block content %}{% endblock %}
+        </div>
+    </body>
+</html>
