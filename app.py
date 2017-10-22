@@ -1,6 +1,10 @@
 from flask import Flask, render_template, g, request, jsonify
+<<<<<<< HEAD
 from flask_login import LoginManager
 import models
+=======
+from werkzeug.security import generate_password_hash, check_password_hash
+>>>>>>> 100856b436b1ca4347767f0f7e08c65276276f27
 
 import sqlite3
 
@@ -80,7 +84,7 @@ def create_tweet():
 		error = 'You must provide a message.'
 	elif 'author_id' not in request.form:
 		error = 'You must provide an author ID'
-	
+
 	if error:
 		# Return an error response with the message
 		# if invalid
@@ -88,7 +92,7 @@ def create_tweet():
 			status='error',
 			error=error
 		)
-	
+
 	# Otherwise grab the database connection and insert
 	# the tweet into it.
 	db = get_db()
@@ -125,8 +129,8 @@ def get_tweet(tweet_id):
 	#		'author_id': 2
 	#	}
 	# ]
-	# 
-	# we get just the internal dictionary that we want rather than having to access the 0th 
+	#
+	# we get just the internal dictionary that we want rather than having to access the 0th
 	# element of that list.
 
 	tweet = query_db('''select * from tweet where tweet_id = ?''', [tweet_id], one=True)
@@ -136,9 +140,9 @@ def get_tweet(tweet_id):
 		return jsonify(
 			status='error',
 			error='Tweet not found'
-			
+
 		)
-		
+
 	# Return a JSON response with the tweet information as well as
 	# a success status
 	return jsonify(
@@ -157,9 +161,9 @@ def update_tweet(tweet_id):
 		return jsonify(
 			status='error',
 			error='Tweet not found'
-			
+
 		)
-	
+
 	# Set the old values first
 	message = tweet['message']
 	author_id = tweet['author_id']
@@ -179,7 +183,7 @@ def update_tweet(tweet_id):
 		db = get_db()
 		db.execute('''update tweet set message = ?, author_id = ? WHERE tweet_id = ?''', [message, author_id, tweet_id])
 		db.commit()
-	
+
 	# return a success message
 	# along with the updated values
 	return jsonify(
@@ -198,9 +202,9 @@ def delete_tweet(tweet_id):
 		return jsonify(
 			status='error',
 			error='Tweet not found'
-			
+
 		)
-	
+
 	# delete the tweet with the given ID
 	db = get_db()
 	db.execute('''delete from tweet where tweet_id=?''', [tweet_id])
@@ -214,6 +218,156 @@ def delete_tweet(tweet_id):
 	)
 
 
+### USER API ###
+@app.route('/api/v1/user/', methods=['POST'])
+def create_user():
+	error = None
+	if 'username' not in request.form:
+		error = 'You must provide a username.'
+	elif 'password' not in request.form:
+		error = 'You must provide a password.'
+	elif 'first_name' not in request.form:
+		error = 'You must provide a first name.'
+	elif 'last_name' not in request.form:
+		error = 'You must provide a last name.'
+	elif 'email' not in request.form:
+		error = 'You must provide an email address.'
+	elif len(request.form['password']) < 8:
+		error = 'Password must be at least 8 characters'
+	# we can add more validation for different fields here,
+	# including making sure emails are of the correct format
+	# but we'll skip that for this demo
+
+	if error:
+		return jsonify(
+			status='error',
+			error=error
+		)
+
+	db = get_db()
+
+	# check for existing user with the same username
+	user = query_db('''select * from user where username = ?''', [request.form['username']], one=True)
+	# User with username already exists
+	if user:
+		return jsonify(
+			status='error',
+			error='Username already exists.'
+
+		)
+
+	# We only want to store a hashed version of the password
+	# rather than a full password for security purposes.
+	# When we want to check if a submitted password is correct (for login, for example)
+	# we simply hash the submitted password and check if the hash in the database
+	# is the same as the hash of the submitted password
+	hashed_pw = generate_password_hash(request.form['password'])
+
+	db.execute('''insert into user (username, pw_hash, first_name, last_name, email) values (?, ?, ?, ?, ?)''', \
+		[request.form['username'], hashed_pw, request.form['first_name'], request.form['last_name'], \
+		request.form['email']])
+
+	db.commit()
+
+	return jsonify(
+		status='success'
+	)
+
+# Flask has validation in the routing as well, to make sure
+# that the type of the input is as expected. Here, the tweet_id
+# must be an integer, and so we can specify int:tweet_id. The
+# parameter gets passed to the function.
+@app.route('/api/v1/user/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+	user = query_db('''select * from user where user_id = ?''', [user_id], one=True)
+	if not user:
+		return jsonify(
+			status='error',
+			error='User not found'
+
+		)
+
+	# Return a JSON response with the user information as well as
+	# a success status
+	return jsonify(
+			status='success',
+			user_id=user_id,
+			username=user['username'],
+			first_name=user['first_name'],
+			last_name=user['last_name'],
+			email=user['email']
+		)
+
+@app.route('/api/v1/user/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+	user = query_db('''select * from user where user_id = ?''', [user_id], one=True)
+	if not user:
+		return jsonify(
+			status='error',
+			error='User not found'
+
+		)
+
+	# Don't let them change their username
+	first_name = user['first_name']
+	last_name = user['last_name']
+	email = user['email']
+	pw_hash = user['pw_hash']
+
+
+	changed = False
+	# update them if they changed
+	if 'first_name' in request.form:
+		first_name = request.form['first_name']
+		changed = True
+	if 'last_name' in request.form:
+		last_name = request.form['last_name']
+		changed = True
+	if 'email' in request.form:
+		email = request.form['email']
+		changed = True
+	if 'password' in request.form:
+		pw_hash = generate_password_hash(request.form['password'])
+		changed = True
+
+	# We only need to update the values in the database
+	# if any of the values actually changed.
+	if changed:
+		db = get_db()
+		db.execute('''update user set first_name = ?, last_name = ?, email = ?, pw_hash = ?''', \
+			[first_name, last_name, email, pw_hash])
+		db.commit()
+
+	return jsonify(
+		status='success',
+		user_id=user_id,
+		username=user['username'],
+		first_name=first_name,
+		last_name=last_name,
+		email=email
+	)
+
+# DELETE for deleting an user
+@app.route('/api/v1/user/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+
+	user = query_db('''select * from user where user_id = ?''', [user_id], one=True)
+	if not user:
+		return jsonify(
+			status='error',
+			error='User not found'
+
+		)
+
+	db = get_db()
+	db.execute('''delete from user where user_id=?''', [user_id])
+	db.commit()
+
+	return jsonify(
+		status='success',
+		user_id=user_id,
+	)
+
 ### User stuff ###
 @lm.user_loader
 def user_loader(id):
@@ -222,7 +376,6 @@ def user_loader(id):
 	user = User()
 	user.id = x # TODO: whatever you get from the query
 	return user
-
 
 ### Pages ###
 @app.route("/")
@@ -241,4 +394,3 @@ def login():
 @app.route("/register")
 def register():
 	return "Registration page"
-	
