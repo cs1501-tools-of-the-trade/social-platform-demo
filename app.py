@@ -1,10 +1,8 @@
 from flask import Flask, render_template, g, request, jsonify
-<<<<<<< HEAD
 from flask_login import LoginManager
+import json
 import models
-=======
 from werkzeug.security import generate_password_hash, check_password_hash
->>>>>>> 100856b436b1ca4347767f0f7e08c65276276f27
 
 import sqlite3
 
@@ -217,7 +215,6 @@ def delete_tweet(tweet_id):
 		tweet_id=tweet_id,
 	)
 
-
 ### USER API ###
 @app.route('/api/v1/user/', methods=['POST'])
 def create_user():
@@ -253,7 +250,6 @@ def create_user():
 		return jsonify(
 			status='error',
 			error='Username already exists.'
-
 		)
 
 	# We only want to store a hashed version of the password
@@ -284,7 +280,6 @@ def get_user(user_id):
 		return jsonify(
 			status='error',
 			error='User not found'
-
 		)
 
 	# Return a JSON response with the user information as well as
@@ -295,7 +290,29 @@ def get_user(user_id):
 			username=user['username'],
 			first_name=user['first_name'],
 			last_name=user['last_name'],
-			email=user['email']
+			email=user['email'],
+			pw_hash=user['pw_hash']
+		)
+
+@app.route('/api/v1/user/<string:username>', methods=['GET'])
+def get_user_username(username):
+	user = query_db('''select * from user where username = ?''', [username], one=True)
+	if not user:
+		return jsonify(
+			status='error',
+			error='User not found'
+		)
+
+	# Return a JSON response with the user information as well as
+	# a success status
+	return jsonify(
+			status='success',
+			user_id=user["user_id"],
+			username=username,
+			first_name=user['first_name'],
+			last_name=user['last_name'],
+			email=user['email'],
+			pw_hash=user['pw_hash']
 		)
 
 @app.route('/api/v1/user/<int:user_id>', methods=['PUT'])
@@ -372,9 +389,19 @@ def delete_user(user_id):
 @lm.user_loader
 def user_loader(id):
 	# TODO: add query to get user and ID here
+	response = json.loads(get_user(id))
+	if response["status"] == "error":
+		return None
 
-	user = User()
-	user.id = x # TODO: whatever you get from the query
+	user_id = response["user_id"]
+	first_name = response["first_name"]
+	last_name = response["last_name"]
+	username = response["username"]
+	email = response["email"]
+
+	user = User(first_name, last_name, username, email)
+	user.id = user_id
+
 	return user
 
 ### Pages ###
@@ -387,9 +414,23 @@ def index():
 def profile():
 	return "Profile page"
 
-@app.route("/login")
+@app.route("/login", methods=['GET', 'POST'])
 def login():
-	return render_template('login.html')
+	if request.method == 'GET':
+		return render_template('login.html')
+
+	username = request.form['username']
+	password = request.form['password']
+
+	current_pw_hash = generate_password_hash(password)
+
+	response = json.loads(get_user_username(username))
+	if response["pw_hash"] == current_pw_hash:
+		user = User()
+		user.id = response["user_id"]
+		flask_login.login_user(user)
+
+	return "That was an invalid login" # TODO: change this
 
 @app.route("/register")
 def register():
