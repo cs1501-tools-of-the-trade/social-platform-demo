@@ -1,8 +1,13 @@
 from flask import Flask, render_template, g, request, jsonify
+from flask_login import LoginManager
+import models
 
 import sqlite3
 
 app = Flask(__name__)
+
+lm = LoginManager()
+lm.init_app(app)
 
 ### Database stuff ###
 def get_db():
@@ -46,10 +51,10 @@ def init_db():
 def query_db(query, args=(), one=False):
     """Queries the database and returns a list of dictionaries."""
     cur = get_db().execute(query, args)
-	# Get all rows
+		# Get all rows
     rv = cur.fetchall()
 
-	# Only return the first row if one=True
+		# Only return the first row if one=True
     return (rv[0] if rv else None) if one else rv
 
 # When the app shuts down, we need to close
@@ -207,6 +212,17 @@ def delete_tweet(tweet_id):
 		status='success',
 		tweet_id=tweet_id,
 	)
+
+
+### User stuff ###
+@lm.user_loader
+def user_loader(id):
+	# TODO: add query to get user and ID here
+
+	user = User()
+	user.id = x # TODO: whatever you get from the query
+	return user
+
 
 ### Pages ###
 @app.route("/")
