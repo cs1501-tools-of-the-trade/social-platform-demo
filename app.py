@@ -432,6 +432,23 @@ def login():
 
 	return "That was an invalid login" # TODO: change this
 
-@app.route("/register")
+@app.route("/register", methods=['GET', 'POST'])
 def register():
-	return "Registration page"
+	if request.method == 'GET':
+		return render_template('register.html')
+
+	first_name = request.form['first_name']
+	last_name = request.form['last_name']
+	username = request.form['username']
+	password = request.form['password']
+	confirm_password = request.form['confirm_password']
+
+	if password != confirm_password:
+		return "Passwords didn't match"
+
+	# TODO: check if username already exists
+	if username:
+		return "Username already exists"
+		
+	# Create
+	return first_name + " " + last_name + " " + username + " " + password + " " + confirm_password
