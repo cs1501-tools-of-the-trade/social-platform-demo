@@ -16,5 +16,11 @@
 {% endblock %}
 
 {% block content %}
-<h1>Some content here.</h1>
+	<h1 style="padding: 20px">Tweets</h1>
+	{% for tweet in tweets %}
+		<div class="jumbotron">
+			<h3>{{ tweet.message }}</h3>
+			<p>{{ tweet.first_name }} {{ tweet.last_name }}</p>
+		</div>
+	{% endfor %}
 {% endblock %}

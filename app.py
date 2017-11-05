@@ -2,11 +2,13 @@ from flask import Flask, render_template, g, request, jsonify
 from flask_login import LoginManager
 import json
 import models
+import requests
 from werkzeug.security import generate_password_hash, check_password_hash
-
 import sqlite3
 
 app = Flask(__name__)
+
+BASE_URL = "http://localhost:5000/"
 
 lm = LoginManager()
 lm.init_app(app)
@@ -148,6 +150,30 @@ def get_tweet(tweet_id):
 			tweet_id=tweet_id,
 			message=tweet['message'],
 			author_id=tweet['author_id']
+		)
+
+@app.route('/api/v1/tweet/', methods=['GET'])
+def get_all_tweets():
+	tweets = query_db('''select * from tweet''', [], one=False)
+
+	# no tweet found, meaning tweet == None
+	if not tweets:
+		return jsonify(
+			status='error',
+			error='Tweets not found'
+		)
+
+	data = []
+	for tweet in tweets:
+		data.append({
+			"tweet_id": str(tweet["tweet_id"]),
+			"message": tweet["message"],
+			"author_id": str(tweet["author_id"])
+		})
+
+	return jsonify(
+			status='success',
+			data=data
 		)
 
 # Use PUT for updating an existing entity
@@ -407,8 +433,36 @@ def user_loader(id):
 ### Pages ###
 @app.route("/")
 def index():
-	# TODO: check if user is logged in
-	return render_template('index.html')
+	tweets_raw = query_db('''select * from tweet''', [], one=False)
+	if not tweets_raw:
+		return jsonify(
+			status='error',
+			error='Tweets not found'
+		)
+	data = []
+	for tweet in tweets_raw:
+		data.append({
+			"tweet_id": str(tweet["tweet_id"]),
+			"message": tweet["message"],
+			"author_id": str(tweet["author_id"])
+		})
+
+	for tweet in data:
+		author_id = tweet["author_id"]
+		user = query_db('''select * from user where user_id = ?''', [tweet["author_id"]], one=True)
+		first_name = user["first_name"]
+		last_name = user["last_name"]
+		username = user["username"]
+
+		tweet["first_name"] = first_name
+		tweet["last_name"] = last_name
+		tweet["username"] = username
+
+	content = {
+		"tweets": data
+	}
+
+	return render_template('index.html', **content)
 
 @app.route("/profile")
 def profile():
