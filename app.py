@@ -434,11 +434,6 @@ def user_loader(id):
 @app.route("/")
 def index():
 	tweets_raw = query_db('''select * from tweet''', [], one=False)
-	if not tweets_raw:
-		return jsonify(
-			status='error',
-			error='Tweets not found'
-		)
 	data = []
 	for tweet in tweets_raw:
 		data.append({
@@ -503,6 +498,6 @@ def register():
 	# TODO: check if username already exists
 	if username:
 		return "Username already exists"
-		
+
 	# Create
 	return first_name + " " + last_name + " " + username + " " + password + " " + confirm_password
